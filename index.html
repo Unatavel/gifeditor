@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>스마트 GIF 생성기</title>
+  <link rel="icon" href="kmou.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="gif-editor.css">
+  <script src="vendor/qrcode.min.js" defer></script>
+  <script src="gif-editor.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo-link" href="http://kmou.ac.kr" target="_blank" rel="noopener noreferrer" title="국립한국해양대학교 홈페이지로 이동">
+      <img src="kmou.png" alt="국립한국해양대학교" width="272" height="54">
+    </a>
+    <nav class="app-nav" aria-label="앱 메뉴">
+      <button type="button" id="nav-gif-edit" class="is-selected" aria-pressed="true">GIF 편집</button>
+      <button type="button" id="nav-make" aria-pressed="false">만들기</button>
+      <button type="button" id="nav-explore" aria-pressed="false">GIF 탐색</button>
+    </nav>
+    <h1 class="site-name">스마트 GIF 생성기</h1>
+  </header>
+  <p id="toast" class="toast" role="alert" hidden></p>
+  <p id="explore-transfer-status" class="explore-transfer-status" role="status" hidden></p>
+  <input
+    id="file-input"
+    class="visually-hidden"
+    type="file"
+    accept="video/*,.mp4,.m4v,.mov,.webm,.mkv,.avi,.wmv,.flv,.mpeg,.mpg,.mpe,.3gp,.3g2,.ogv,.ogg,.ts,.mts,.m2ts,.vob,.asf,.f4v,.m2v,.divx,.qt"
+    aria-hidden="true"
+    tabindex="-1"
+  >
+
+  <main class="wrap">
+    <section id="gif-editor" aria-labelledby="gif-editor-title">
+      <header class="gif-hero">
+        <h2 id="gif-editor-title">쓰기 쉬운 <span>GIF 편집기</span></h2>
+        <p>GIF 파일을 간편히 편집하기</p>
+      </header>
+
+      <section class="gif-upload" id="gif-upload" aria-labelledby="gif-upload-title">
+        <input id="gif-file" type="file" accept="image/gif,.gif" hidden>
+        <div class="gif-upload-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 16V4m-4 4 4-4 4 4M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>
+        </div>
+        <h3 id="gif-upload-title">GIF 파일을 여기에 놓으세요</h3>
+        <p>편집 가능한 포맷은 <strong>GIF</strong>입니다. 한 번에 한 파일을 열 수 있습니다.</p>
+        <button type="button" class="gif-primary" id="gif-pick">GIF 파일 선택</button>
+        <p id="gif-upload-error" class="gif-error" role="alert" hidden></p>
+      </section>
+
+      <div class="gif-workspace" id="gif-workspace" hidden>
+        <div class="gif-previews">
+          <details class="gif-card" id="gif-original" open>
+            <summary><span><span lang="en">Original GIF</span> · 원본 GIF</span></summary>
+            <div class="gif-preview" id="gif-original-preview"></div>
+            <dl class="gif-meta" id="gif-original-meta"></dl>
+          </details>
+          <details class="gif-card" id="gif-result" hidden>
+            <summary id="gif-result-title"><span><span lang="en">Edit Result</span> · 편집 결과</span></summary>
+            <div class="gif-preview" id="gif-result-preview"></div>
+            <dl class="gif-meta" id="gif-result-meta"></dl>
+            <div class="gif-download"><button type="button" class="gif-primary" id="gif-download"><span lang="en">Download</span> · 다운로드</button></div>
+          </details>
+        </div>
+        <section class="gif-card gif-tools" aria-labelledby="gif-tools-title">
+          <h3 id="gif-tools-title" tabindex="-1"><span lang="en">Editor Tools</span> · 편집 도구</h3>
+          <div class="gif-tool-grid" id="gif-tool-grid"></div>
+          <form id="gif-tool-form" hidden>
+            <div id="gif-tool-options"></div>
+            <div class="gif-actions">
+              <button type="button" class="gif-secondary" id="gif-cancel"><span lang="en">Cancel</span> · 취소</button>
+              <button type="submit" class="gif-primary" id="gif-apply"><span lang="en">Apply</span> · 적용</button>
+            </div>
+          </form>
+          <p id="gif-work-status" role="status" hidden></p>
+          <div class="gif-actions gif-footer" id="gif-footer">
+            <button type="button" class="gif-secondary" id="gif-reset"><span lang="en">Close Editor</span> · 편집 종료</button>
+            <button type="button" class="gif-primary" id="gif-save" disabled><span lang="en">Save</span> · 저장</button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="landing" hidden>
+      <section class="hero" aria-labelledby="hero-title">
+        <p class="hero-kicker">VIDEO · GIF · ANIMATION</p>
+        <h2 id="hero-title" class="hero-title">
+          <span class="hero-word">Video</span>를 <span class="hero-word accent">GIF</span>로 변환
+        </h2>
+        <p class="hero-sub">동영상을 애니로</p>
+      </section>
+
+      <section class="drop-card" id="dropzone" aria-labelledby="drop-heading">
+        <div class="drop-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48">
+            <path fill="currentColor" d="M24 8l9 9h-6v12h-6V17h-6l9-9z"/>
+            <path fill="currentColor" d="M8 32h8v4h16v-4h8v8H8v-8z"/>
+          </svg>
+        </div>
+        <h3 id="drop-heading">동영상 파일을 여기에 놓거나 불러오세요</h3>
+        <p class="drop-hint">한 번에 한 파일만 선택할 수 있습니다. 미리보기로 설정을 확인한 뒤 GIF를 생성하세요. 최대 30FPS입니다.</p>
+        <button type="button" class="primary" id="pick-button">동영상 선택</button>
+      </section>
+
+      <section class="format-card" aria-labelledby="format-heading">
+        <div class="format-head">
+          <h3 id="format-heading">GIF로 변환할 수 있는 형식</h3>
+          <p>아이콘은 실제 크기를 바꿀 수 있는 SVG입니다. 아래 형식의 동영상만 올릴 수 있습니다.</p>
+        </div>
+        <ul class="format-list" id="format-list"></ul>
+      </section>
+    </section>
+
+    <section id="explore" hidden>
+      <section class="hero" aria-labelledby="explore-title">
+        <p class="hero-kicker">GIPHY · TRENDING · SEARCH</p>
+        <h2 id="explore-title" class="hero-title">인터넷에서 <span class="hero-word accent">GIF</span> 찾아오기</h2>
+        <p class="hero-sub">인기 짤을 보고, 검색하고, 링크를 복사하세요</p>
+      </section>
+
+      <section class="explore-card" aria-labelledby="explore-title">
+        <div class="explore-toolbar">
+          <form id="explore-form" class="explore-search" role="search">
+            <label class="visually-hidden" for="explore-query">GIF 검색</label>
+            <input id="explore-query" type="search" placeholder="원하는 GIF를 검색하세요" enterkeyhint="search" autocomplete="off">
+            <button type="submit" class="primary">검색</button>
+          </form>
+          <div class="size-chips explore-cats" id="explore-cats" role="tablist" aria-label="GIF 카테고리">
+            <button type="button" class="is-selected" data-cat="trending" aria-pressed="true">인기</button>
+            <button type="button" data-cat="funny" aria-pressed="false">웃긴 짤</button>
+            <button type="button" data-cat="animals" aria-pressed="false">동물</button>
+            <button type="button" data-cat="gaming" aria-pressed="false">게임</button>
+            <button type="button" data-cat="anime" aria-pressed="false">애니메이션</button>
+            <button type="button" data-cat="reaction" aria-pressed="false">반응</button>
+            <button type="button" data-cat="sports" aria-pressed="false">스포츠</button>
+            <button type="button" data-cat="love" aria-pressed="false">사랑</button>
+          </div>
+        </div>
+        <p class="explore-status" id="explore-status">인기 GIF를 불러오는 중입니다.</p>
+        <div class="explore-grid" id="explore-grid"></div>
+        <div class="explore-more-wrap">
+          <button type="button" class="ghost" id="explore-more" hidden>더 보기</button>
+        </div>
+        <a class="giphy-attr" href="https://giphy.com" target="_blank" rel="noopener noreferrer">
+          <span>Powered by</span>
+          <strong>GIPHY</strong>
+        </a>
+      </section>
+    </section>
+
+    <section class="workbench" id="workbench" hidden>
+      <div class="editor">
+        <nav class="tool-rail" id="tool-rail" aria-label="편집 도구">
+          <p class="rail-title">도구</p>
+          <button type="button" data-panel="file">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3h7l5 5v13H6zM12 4.5V9h4.5"/></svg>
+            파일
+          </button>
+          <button type="button" class="is-selected" data-panel="play" aria-pressed="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+            재생
+          </button>
+          <button type="button" data-panel="size">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 8V4h4v2H6v2zm16 0h-2V6h-2V4h4zm0 12h-4v-2h2v-2h2zM8 20H4v-4h2v2h2z"/></svg>
+            크기
+          </button>
+          <button type="button" data-panel="crop">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3h2v4h8v8h4v2h-4v4h-2v-4H7V7H3V5h4z"/></svg>
+            자르기
+          </button>
+          <button type="button" data-panel="filter">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
+            필터
+          </button>
+          <button type="button" data-panel="draw">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 21l3.6-1 11-11-2.6-2.6-11 11L3 21zm15.7-15.3 1.6-1.6-2.4-2.4-1.6 1.6z"/></svg>
+            그리기
+          </button>
+          <button type="button" data-panel="text">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 6h14v3h-5v9h-4V9H5z"/></svg>
+            텍스트
+          </button>
+          <button type="button" data-panel="sticker">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 109 9h-6a3 3 0 01-3-3z"/></svg>
+            스티커
+          </button>
+        </nav>
+
+        <div class="editor-stage">
+          <article class="preview-card" aria-labelledby="preview-heading">
+            <div class="card-head">
+              <h3 id="preview-heading">미리보기</h3>
+              <p id="preview-status">왼쪽 도구로 편집하고, 아래 버튼으로 GIF를 만듭니다.</p>
+            </div>
+            <div class="preview-stage">
+              <canvas id="preview-canvas" width="480" height="270" tabindex="0" aria-label="편집 미리보기" aria-describedby="sticker-preview-help"></canvas>
+            </div>
+            <div class="preview-tools">
+              <button type="button" class="ghost" id="crop-tool-button">자르기 도구</button>
+              <button type="button" class="ghost" id="crop-apply-button" hidden>자르기 적용</button>
+              <button type="button" class="ghost" id="crop-cancel-button" hidden>자르기 취소</button>
+              <button type="button" class="ghost" id="crop-reedit-button" hidden>다시 수정</button>
+            </div>
+            <div class="preview-bar">
+              <div class="preview-actions">
+                <button type="button" class="ghost" id="play-button">재생</button>
+                <button type="button" class="ghost" id="pause-button">일시정지</button>
+                <button type="button" class="ghost" id="restart-button">처음부터</button>
+              </div>
+              <p class="frame-pos" id="frame-pos">프레임 0 / 0</p>
+            </div>
+          </article>
+
+          <article class="thumb-card" aria-labelledby="thumb-heading">
+            <h3 id="thumb-heading">타임라인</h3>
+            <p class="thumb-hint" id="thumb-hint">선택한 구간의 프레임입니다. 클릭하면 그 장면으로 이동합니다.</p>
+            <div class="thumb-strip" id="thumb-strip"></div>
+          </article>
+
+          <article class="progress-card" aria-labelledby="progress-heading">
+            <div class="progress-head">
+              <h3 id="progress-heading">보내기</h3>
+              <p id="progress-label">미리보기를 확인한 뒤 생성하세요.</p>
+            </div>
+            <div class="progress-row">
+              <button type="button" class="primary generate-btn" id="generate-button" disabled>GIF 생성</button>
+              <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+              </div>
+              <span class="progress-pct" id="progress-pct">0%</span>
+              <button type="button" class="primary download-btn" id="download-button" disabled>다운로드</button>
+              <button type="button" class="primary share-btn" id="share-button" disabled>QR · 공유</button>
+            </div>
+          </article>
+        </div>
+
+        <aside class="inspector" id="inspector">
+          <article class="settings-card editor-card" data-inspector="file" hidden>
+            <h3 id="info-heading">파일</h3>
+            <p class="help">올린 동영상 정보입니다. 다시 올리려면 아래 버튼을 누르세요.</p>
+            <dl class="info-grid" id="file-info"></dl>
+            <button type="button" class="ghost" id="replace-file-button">다른 동영상 선택</button>
+          </article>
+
+          <article class="settings-card editor-card" data-inspector="play">
+            <h3 id="settings-heading">재생</h3>
+            <div class="setting">
+              <div class="setting-label">
+                <span>재생 속도</span>
+                <output id="speed-value" for="speed-slider">1.00×</output>
+              </div>
+              <input id="speed-slider" type="range" min="0.25" max="3" step="0.05" value="1">
+            </div>
+            <div class="setting">
+              <div class="setting-label">
+                <span>FPS</span>
+                <output id="fps-value" for="fps-slider">30</output>
+              </div>
+              <input id="fps-slider" type="range" min="1" max="30" step="1" value="30">
+            </div>
+            <div class="setting" id="play-range"></div>
+            <div class="setting">
+              <div class="setting-label"><span>재생 방향</span></div>
+              <div class="size-chips" id="order-chips" role="group" aria-label="재생 방향">
+                <button type="button" class="is-selected" data-order="forward" aria-pressed="true">정방향</button>
+                <button type="button" data-order="reverse" aria-pressed="false">역방향</button>
+              </div>
+              <p class="help">역방향은 선택한 구간의 마지막 프레임부터 거꾸로 재생합니다. 정방향으로 바꾸면 원래 순서가 유지됩니다.</p>
+            </div>
+          </article>
+
+          <article class="settings-card editor-card" data-inspector="size" hidden>
+            <h3>크기</h3>
+            <div class="size-chips" id="size-presets" role="group" aria-label="크기 프리셋">
+              <button type="button" data-preset="320">320px</button>
+              <button type="button" class="is-selected" data-preset="480" aria-pressed="true">480px</button>
+              <button type="button" data-preset="720">720px</button>
+            </div>
+            <div class="size-inputs">
+              <label>가로 <input id="out-width" type="number" min="16" max="1280" step="1" value="480"> px</label>
+              <label>세로 <input id="out-height" type="number" min="16" max="1280" step="1" value="270"> px</label>
+            </div>
+            <label class="check-field">
+              <input id="keep-ratio" type="checkbox" checked>
+              원본 비율 유지
+            </label>
+            <p class="help">기본은 비율을 유지하고 빈 칸은 여백으로 채웁니다.</p>
+            <label class="color-field">여백 색
+              <input id="pad-color" type="color" value="#111827">
+            </label>
+          </article>
+
+          <article class="settings-card editor-card" data-inspector="crop" hidden>
+            <h3 id="crop-heading">자르기</h3>
+            <p class="help">자르기 도구로 영역을 정한 뒤 적용하세요. 원본은 그대로 두고 설정만 저장합니다.</p>
+            <div class="setting-label"><span>비율</span></div>
+            <div class="size-chips" id="crop-ratios" role="group" aria-label="자르기 비율">
+              <button type="button" class="is-selected" data-ratio="free" aria-pressed="true">자유</button>
+              <button type="button" data-ratio="1:1">1:1</button>
+              <button type="button" data-ratio="4:3">4:3</button>
+              <button type="button" data-ratio="3:4">3:4</button>
+              <button type="button" data-ratio="16:9">16:9</button>
+              <button type="button" data-ratio="9:16">9:16</button>
+            </div>
+            <div class="size-inputs">
+              <label>가로 <input id="crop-width" type="number" min="16" value="480"> px</label>
+              <label>세로 <input id="crop-height" type="number" min="16" value="270"> px</label>
+            </div>
+          </article>
+
+          <article class="settings-card editor-card" data-inspector="filter" hidden>
+            <h3 id="filter-heading">필터</h3>
+            <p class="help">필터만 바뀌고 다른 편집은 그대로입니다.</p>
+            <div class="size-chips" id="filter-presets" role="group" aria-label="필터 프리셋">
+              <button type="button" class="is-selected" data-preset="none" aria-pressed="true">기본</button>
+              <button type="button" data-preset="bw">흑백</button>
+              <button type="button" data-preset="sepia">세피아</button>
+              <button type="button" data-preset="vintage">빈티지</button>
+            </div>
+            <div class="setting">
+              <div class="setting-label"><span>밝기</span><output id="filter-brightness-value">100</output></div>
+              <input id="filter-brightness" type="range" min="40" max="160" value="100">
+            </div>
+            <div class="setting">
+              <div class="setting-label"><span>대비</span><output id="filter-contrast-value">100</output></div>
+              <input id="filter-contrast" type="range" min="40" max="180" value="100">
+            </div>
+            <div class="setting">
+              <div class="setting-label"><span>채도</span><output id="filter-saturation-value">100</output></div>
+              <input id="filter-saturation" type="range" min="0" max="200" value="100">
+            </div>
+            <div class="setting">
+              <div class="setting-label"><span>흐림</span><output id="filter-blur-value">0</output></div>
+              <input id="filter-blur" type="range" min="0" max="12" value="0">
+            </div>
+            <div class="preview-actions">
+              <button type="button" class="ghost" id="filter-compare-button">원본과 비교</button>
+              <button type="button" class="ghost" id="filter-reset-button">필터 초기화</button>
+            </div>
+          </article>
+
+          <article class="settings-card editor-card" data-inspector="draw" hidden>
+            <h3 id="draw-heading">그리기</h3>
+            <p class="help">그리는 동안 미리보기는 일시정지됩니다.</p>
+            <div class="size-chips" id="draw-tools" role="group" aria-label="그리기 도구">
+              <button type="button" class="is-selected" data-tool="select" aria-pressed="true">선택</button>
+              <button type="button" data-tool="pen">펜</button>
+              <button type="button" data-tool="highlight">형광펜</button>
+              <button type="button" data-tool="eraser">지우개</button>
+              <button type="button" data-tool="line">직선</button>
+              <button type="button" data-tool="arrow">화살표</button>
+              <button type="button" data-tool="rect">사각형</button>
+              <button type="button" data-tool="circle">원형</button>
+            </div>
+            <div class="size-inputs">
+              <label class="color-field">색상 <input id="draw-color" type="color" value="#ff3b30"></label>
+              <label>두께 <input id="draw-width" type="range" min="2" max="28" value="6"></label>
+              <output id="draw-width-value">6</output>
+            </div>
+            <div class="preview-actions">
+              <button type="button" class="ghost" id="draw-undo-button">실행 취소</button>
+              <button type="button" class="ghost" id="draw-redo-button">다시 실행</button>
+            </div>
+            <ul class="layer-list" id="draw-list"></ul>
+            <div class="editor-fields" id="draw-editor" hidden>
+              <div class="setting" id="draw-frame-range"></div>
+              <button type="button" class="ghost danger" id="delete-draw-button">이 그림 삭제</button>
+            </div>
+          </article>
+
+          <article class="settings-card editor-card" data-inspector="text" hidden>
+            <h3 id="text-heading">텍스트</h3>
+            <p class="help">여러 개를 넣고 미리보기에서 끌어 옮기세요.</p>
+            <div class="preview-actions">
+              <button type="button" class="primary generate-btn" id="add-text-button">텍스트 추가</button>
+            </div>
+            <ul class="layer-list" id="text-list"></ul>
+            <div class="editor-fields" id="text-editor" hidden>
+              <label class="stack-field">내용
+                <input id="text-content" type="text" maxlength="80" placeholder="문구를 입력하세요">
+              </label>
+              <div class="size-inputs">
+                <label>크기 <input id="text-size" type="range" min="12" max="120" value="36"></label>
+                <output id="text-size-value">36</output>
+              </div>
+              <div class="size-inputs">
+                <label class="color-field">색상 <input id="text-color" type="color" value="#ffffff"></label>
+                <label>글꼴
+                  <select id="text-font">
+                    <option value='"Noto Sans KR", sans-serif'>Noto Sans KR</option>
+                    <option value='"Malgun Gothic", sans-serif'>맑은 고딕</option>
+                    <option value="Georgia, serif">명조</option>
+                    <option value="Impact, sans-serif">Impact</option>
+                    <option value='"Courier New", monospace'>고정폭</option>
+                  </select>
+                </label>
+                <label class="check-field"><input id="text-bold" type="checkbox" checked> 굵게</label>
+              </div>
+              <label class="check-field"><input id="text-outline" type="checkbox" checked> 외곽선</label>
+              <div class="size-inputs">
+                <label class="color-field">외곽선 색 <input id="text-outline-color" type="color" value="#000000"></label>
+                <label>외곽선 두께 <input id="text-outline-width" type="range" min="1" max="12" value="4"></label>
+              </div>
+              <label class="check-field"><input id="text-shadow" type="checkbox" checked> 그림자</label>
+              <div class="setting">
+                <div class="setting-label"><span>투명도</span><output id="text-opacity-value">100%</output></div>
+                <input id="text-opacity" type="range" min="0" max="100" value="100">
+              </div>
+              <div class="setting" id="text-frame-range"></div>
+              <button type="button" class="ghost danger" id="delete-text-button">이 텍스트 삭제</button>
+            </div>
+          </article>
+
+          <article class="settings-card editor-card" data-inspector="sticker" hidden>
+            <h3 id="sticker-heading">스티커</h3>
+            <p class="help">기본 스티커를 누르거나 PNG, WebP를 직접 올리세요.</p>
+            <div class="sticker-grid" id="sticker-grid"></div>
+            <div class="preview-actions">
+              <button type="button" class="ghost" id="upload-sticker-button">PNG / WebP 올리기</button>
+              <input id="sticker-file" class="visually-hidden" type="file" accept="image/png,image/webp,.png,.webp">
+            </div>
+            <ul class="layer-list" id="sticker-list"></ul>
+            <div class="editor-fields" id="sticker-editor" hidden>
+              <p class="help" id="sticker-preview-help">미리보기에서 모서리의 네모를 끌어 크기를 조절하고, 둥근 손잡이를 끌어 회전하세요. 키보드로는 미리보기에서 +, − 키로 크기를, [, ] 키로 각도를 바꿀 수 있습니다.</p>
+              <div class="size-inputs sticker-transform-values">
+                <span>크기 <output id="sticker-scale-value">20%</output></span>
+                <span>회전 <output id="sticker-rotate-value">0°</output></span>
+              </div>
+              <div class="setting">
+                <div class="setting-label"><span>투명도</span><output id="sticker-opacity-value">100%</output></div>
+                <input id="sticker-opacity" type="range" min="0" max="100" value="100">
+              </div>
+              <div class="preview-actions">
+                <button type="button" class="ghost" id="flip-sticker-button">좌우 반전</button>
+                <button type="button" class="ghost" id="duplicate-sticker-button">복제</button>
+                <button type="button" class="ghost danger" id="delete-sticker-button">삭제</button>
+              </div>
+              <div class="setting" id="sticker-frame-range"></div>
+            </div>
+          </article>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <div class="sheet" id="share-sheet" hidden>
+    <div class="sheet-card" role="dialog" aria-labelledby="share-title">
+      <h2 id="share-title">GIF 공유</h2>
+      <p id="share-name"></p>
+      <div class="share-actions">
+        <button type="button" data-send="kakao">카카오톡</button>
+        <button type="button" data-send="mail">이메일</button>
+        <button type="button" data-send="sms">문자</button>
+        <button type="button" data-send="qr">QR 코드</button>
+      </div>
+      <div id="qr-panel" hidden>
+        <p id="qr-status">받는 링크를 만드는 중입니다.</p>
+        <div id="qr-target"></div>
+        <a id="qr-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+        <button type="button" class="ghost" id="qr-copy">링크 복사</button>
+      </div>
+      <button type="button" class="ghost" id="share-close">닫기</button>
+    </div>
+  </div>
+
+  <div class="sheet" id="explore-sheet" hidden>
+    <div class="sheet-card explore-preview-card" role="dialog" aria-modal="true" aria-labelledby="explore-preview-title">
+      <div class="explore-preview-head">
+        <h2 id="explore-preview-title">GIF 미리보기</h2>
+        <button type="button" class="ghost" id="explore-preview-close">닫기</button>
+      </div>
+      <div class="explore-preview-media">
+        <img id="explore-preview-image" alt="">
+      </div>
+      <p class="explore-preview-meta" id="explore-preview-meta"></p>
+      <a id="explore-preview-url" href="#" target="_blank" rel="noopener noreferrer"></a>
+      <div class="preview-actions explore-preview-actions">
+        <button type="button" class="primary" id="explore-copy">링크 복사</button>
+        <a class="ghost" id="explore-open" href="#" target="_blank" rel="noopener noreferrer">GIPHY에서 열기</a>
+      </div>
+      <p id="explore-preview-status" class="explore-preview-status" role="status" hidden></p>
+    </div>
+  </div>
+</body>
+</html>

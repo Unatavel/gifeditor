@@ -1,0 +1,175 @@
+body.is-gif-edit {
+  background: radial-gradient(ellipse at 50% 4%, #e4edf9, transparent 58%), #f5f7fb;
+}
+
+body.is-gif-edit .wrap {
+  width: min(1120px, calc(100% - 48px));
+  overflow: visible;
+}
+
+#gif-editor {
+  --gif-ink: #132544;
+  --gif-muted: #475b76;
+  --gif-blue: #194fc6;
+  --gif-line: #d6e0ef;
+  color: var(--gif-ink);
+}
+
+.gif-hero { text-align: center; margin: 30px 0 34px; }
+.gif-hero h2 {
+  margin: 0;
+  font-size: clamp(1.9rem, 5.4vw, 3.6rem);
+  letter-spacing: -.065em;
+  line-height: 1.25;
+  font-weight: 800;
+}
+.gif-hero h2 span { color: var(--gif-blue); }
+.gif-hero p { margin: 12px 0 0; color: var(--gif-muted); font-size: 1.05rem; }
+
+.gif-upload, .gif-card {
+  min-width: 0;
+  border: 1px solid var(--gif-line);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 14px 38px #183e7610;
+}
+.gif-upload {
+  max-width: 670px;
+  margin: auto;
+  padding: 44px 24px;
+  border: 2px dashed #92addc;
+  text-align: center;
+  transition: background .15s, border-color .15s;
+}
+.gif-upload.is-dragging { border-color: var(--gif-blue); background: #eef4ff; }
+.gif-upload-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 18px;
+  border-radius: 20px;
+  color: var(--gif-blue);
+  background: #eaf0ff;
+}
+#gif-editor svg {
+  width: 22px; height: 22px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+#gif-editor .gif-upload-icon svg { width: 32px; height: 32px; }
+.gif-upload h3 { margin: 0; font-size: 1.24rem; }
+.gif-upload p { margin: 8px 0 21px; color: var(--gif-muted); }
+.gif-upload strong { padding: 2px 7px; border-radius: 6px; background: #e6edff; color: #163f9a; }
+.gif-upload .gif-error { margin: 16px 0 0; }
+
+.gif-primary, .gif-secondary, .gif-lock {
+  min-height: 42px;
+  border: 1px solid var(--gif-line);
+  border-radius: 10px;
+  padding: 8px 16px;
+  background: #f4f7fc;
+  color: var(--gif-ink);
+  font-weight: 700;
+}
+.gif-primary { background: var(--gif-blue); border-color: var(--gif-blue); color: #fff; }
+.gif-primary:hover:not(:disabled) { background: #153e9c; }
+.gif-secondary:hover, .gif-lock:hover { background: #e9f0fb; }
+#gif-editor button:disabled { opacity: .55; cursor: default; }
+.gif-workspace { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, 1fr); gap: 22px; align-items: start; }
+.gif-previews { display: grid; gap: 14px; min-width: 0; }
+.gif-card summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 16px 20px;
+  font-weight: 800;
+}
+.gif-card summary::-webkit-details-marker { display: none; }
+.gif-card summary::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--gif-blue);
+  border-bottom: 2px solid var(--gif-blue);
+  transform: rotate(-45deg);
+}
+.gif-card[open] summary::before { transform: translateY(-2px) rotate(45deg); }
+.gif-preview {
+  display: grid;
+  place-items: center;
+  min-height: 200px;
+  margin: 0 16px;
+  padding: 12px;
+  border: 1px solid var(--gif-line);
+  border-radius: 12px;
+  background: repeating-conic-gradient(#e8edf5 0% 25%, #f5f7fb 0% 50%) 0 / 20px 20px;
+}
+.gif-preview img, .gif-preview video { max-width: 100%; max-height: 420px; object-fit: contain; }
+.gif-meta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 5px 16px;
+  margin: 14px 20px;
+  font-size: .875rem;
+}
+.gif-meta dt { color: var(--gif-muted); }
+.gif-meta dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.gif-download { padding: 0 20px 16px; }
+
+.gif-tools { padding: 20px; }
+.gif-tools h3 { margin: 0 0 14px; font-size: 1.25rem; }
+.gif-tools h3:focus { outline: none; }
+.gif-tool-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.gif-tool-grid button {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 3px;
+  min-height: 82px;
+  padding: 6px 4px;
+  border: 1px solid var(--gif-line);
+  border-radius: 10px;
+  background: #f7f9fd;
+  color: var(--gif-ink);
+  font-size: .8rem;
+  font-weight: 700;
+}
+.gif-tool-grid button svg { color: var(--gif-blue); }
+.gif-tool-grid button span[lang="ko"] { color: var(--gif-muted); font-size: .76rem; }
+.gif-tool-grid button:hover:not(:disabled) { background: #e9f1ff; border-color: #9ab3e1; }
+.gif-control { display: grid; gap: 5px; margin-bottom: 14px; }
+.gif-control .gif-label, .gif-range-label { font-weight: 700; }
+.gif-range-label { display: flex; justify-content: space-between; gap: 8px; }
+.gif-control output { color: var(--gif-blue); }
+.gif-control input, .gif-control select { width: 100%; accent-color: var(--gif-blue); }
+.gif-control select, .gif-control input[type="number"] {
+  padding: 8px;
+  border: 1px solid #a8bad2;
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+.gif-control input[type="color"] { height: 38px; }
+.gif-check { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.gif-check input { accent-color: var(--gif-blue); width: 17px; height: 17px; flex: none; }
+.gif-lock { display: flex; gap: 7px; align-items: center; margin: 0 auto 14px; font-size: .84rem; }
+.gif-hint { color: var(--gif-muted); font-size: .9rem; margin: 0 0 12px; }
+.gif-hint span { display: block; }
+.gif-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.gif-footer { padding-top: 15px; margin-top: 16px; border-top: 1px solid var(--gif-line); }
+#gif-work-status, .gif-error { border-radius: 9px; padding: 8px 10px; background: #edf3ff; color: #173d86; font-size: .9rem; }
+#gif-work-status.gif-error, .gif-upload .gif-error { background: #fff0f1; color: #93233a; }
+.gif-tools button:focus-visible, .gif-tools input:focus-visible, .gif-tools select:focus-visible,
+.gif-card summary:focus-visible { outline: 2px solid var(--gif-blue); outline-offset: 2px; }
+
+@media (max-width: 760px) {
+  body.is-gif-edit .wrap { width: calc(100% - 28px); }
+  .gif-workspace { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .gif-hero { margin: 14px 0 24px; }
+  .gif-upload { padding: 32px 14px; }
+}
+@media (max-width: 420px) {
+  .app-nav button { padding-inline: 8px; font-size: .84rem; }
+}
